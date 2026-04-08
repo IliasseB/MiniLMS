@@ -111,7 +111,7 @@
                         </tbody></table></div>
                     @endif
                 @else
-                    <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{{ $contenuActuel->contenu }}</div>
+                    <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{{ $premierContenu->contenu }}</div>
                 @endif
             </div>
         @endif

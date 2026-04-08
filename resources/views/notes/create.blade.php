@@ -128,5 +128,14 @@
                         });
                     });
                 </script>
+                <!-- Boutons -->
+                <div class="flex gap-3">
+                    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">
+                        Ajouter
+                    </button>
+                    <a href="{{ route('notes.index') }}" class="bg-gray-200 text-gray-700 px-6 py-2 rounded hover:bg-gray-300">
+                        Annuler
+                    </a>
+                </div>
 
 @endsection
