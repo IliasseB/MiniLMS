@@ -14,6 +14,12 @@ Mini LMS est une plateforme d'apprentissage en ligne (Learning Management System
 
 ---
 
+## 🎥 Démonstration
+
+👉 [Voir la démonstration vidéo parcours admin : ](https://www.loom.com/share/0725a549efd6468f862c7681c3f945ac)
+👉 [Voir la démonstration vidéo parcours apprenant : ](https://www.loom.com/share/69d5a5f8d0fd4be6840ac104c15dc34d)
+
+
 ## 🚀 Fonctionnalités
 
 ### Côté Administrateur
