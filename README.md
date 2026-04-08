@@ -48,8 +48,8 @@ Mini LMS est une plateforme d'apprentissage en ligne (Learning Management System
 
 **1. Cloner le projet**
 ```bash
-git clone <url-du-repo>
-cd mini-lms
+git clone https://github.com/IliasseB/MiniLMS.git
+cd MiniLMS
 ```
 
 **2. Installer les dépendances PHP**
