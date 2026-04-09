@@ -267,7 +267,7 @@
         <!-- Dashboard Apprenant -->
         @php
             $apprenant = auth()->user()->apprenant;
-            $notes = $apprenant->notes;
+            $notes = $apprenant ? $apprenant->notes : collect();
             $moyenne = $notes->count() > 0 ? round($notes->avg('note'), 2) : null;
         @endphp
 
