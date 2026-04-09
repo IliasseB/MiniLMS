@@ -18,7 +18,6 @@
     <!-- Cartes stats -->
     <div class="grid grid-cols-4 gap-4 mb-8">
 
-        <!-- Total apprenants -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col items-center justify-center text-center">
             <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3">
                 <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,7 +28,6 @@
             <p class="text-5xl font-bold text-gray-900">{{ \App\Models\Apprenant::count() }}</p>
         </div>
 
-        <!-- Formations actives -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col items-center justify-center text-center">
             <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-3">
                 <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +38,6 @@
             <p class="text-5xl font-bold text-gray-900">{{ \App\Models\Formation::count() }}</p>
         </div>
 
-        <!-- Derniers résultats quiz -->
         <div class="col-span-2 bg-indigo-600 rounded-2xl shadow-sm p-6">
             <p class="text-xs font-bold text-white uppercase tracking-wide mb-4" style="opacity:0.7">Derniers résultats quiz</p>
             @php
@@ -70,6 +67,7 @@
             </svg>
         </div>
         <input id="search" type="text" placeholder="Rechercher un apprenant..."
+            autocomplete="off"
             class="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
     </div>
 
@@ -84,15 +82,16 @@
                     <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wide">Actions</th>
                 </tr>
             </thead>
-            <tbody id="apprenants-table">
+            <tbody id="apprenants-body">
                 @forelse($apprenants as $apprenant)
-                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition apprenant-row">
+                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition apprenant-row"
+                        data-nom="{{ mb_strtolower($apprenant->nom) }}">
                         <td class="px-6 py-5">
                             <div class="flex items-center gap-3">
                                 <div class="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                                     {{ strtoupper(substr($apprenant->nom, 0, 2)) }}
                                 </div>
-                                <span class="font-semibold text-gray-800 apprenant-nom">{{ $apprenant->nom }}</span>
+                                <span class="font-semibold text-gray-800">{{ $apprenant->nom }}</span>
                             </div>
                         </td>
                         <td class="px-6 py-5 text-gray-500 text-sm">{{ $apprenant->email }}</td>
@@ -142,17 +141,99 @@
                 @endforelse
             </tbody>
         </table>
+
+        <!-- Pied de tableau -->
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+            <p class="text-xs text-gray-400 uppercase tracking-wide" id="compteur"></p>
+            <div class="flex items-center gap-2" id="pagination"></div>
+        </div>
     </div>
 
-    <!-- Script recherche en temps réel -->
     <script>
-        document.getElementById('search').addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            document.querySelectorAll('.apprenant-row').forEach(function(row) {
-                const nom = row.querySelector('.apprenant-nom').textContent.toLowerCase();
-                row.style.display = nom.includes(query) ? '' : 'none';
+        const ITEMS_PAR_PAGE = 4;
+        let pageCourante = 1;
+        let rowsFiltrees = [];
+
+        function normaliser(str) {
+            return str.toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+        }
+
+        function creerBtn(texte, cible, actif = false, disabled = false) {
+            const btn = document.createElement('button');
+            btn.textContent = texte;
+            btn.disabled = disabled;
+            btn.className = `w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition ${
+                actif ? 'bg-indigo-600 text-white border-indigo-600'
+                : disabled ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+            }`;
+            if (!disabled) btn.addEventListener('click', () => afficherPage(cible));
+            return btn;
+        }
+
+        function afficherPage(page) {
+            pageCourante = page;
+            const debut = (page - 1) * ITEMS_PAR_PAGE;
+            const fin = debut + ITEMS_PAR_PAGE;
+
+            rowsFiltrees.forEach((row, index) => {
+                row.style.display = (index >= debut && index < fin) ? '' : 'none';
             });
-        });
+
+            const totalPages = Math.ceil(rowsFiltrees.length / ITEMS_PAR_PAGE);
+            document.getElementById('compteur').textContent =
+                `Affichage ${Math.min(debut + 1, rowsFiltrees.length)}-${Math.min(fin, rowsFiltrees.length)} sur ${rowsFiltrees.length} apprenant(s)`;
+
+            const paginationEl = document.getElementById('pagination');
+            paginationEl.innerHTML = '';
+
+            paginationEl.appendChild(creerBtn('‹', pageCourante - 1, false, pageCourante === 1));
+
+            let pages = [];
+            if (totalPages <= 5) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else {
+                pages.push(1);
+                if (pageCourante > 3) pages.push('...');
+                for (let i = Math.max(2, pageCourante - 1); i <= Math.min(totalPages - 1, pageCourante + 1); i++) {
+                    pages.push(i);
+                }
+                if (pageCourante < totalPages - 2) pages.push('...');
+                pages.push(totalPages);
+            }
+
+            pages.forEach(p => {
+                if (p === '...') {
+                    const span = document.createElement('span');
+                    span.textContent = '...';
+                    span.className = 'w-8 h-8 flex items-center justify-center text-xs text-gray-400';
+                    paginationEl.appendChild(span);
+                } else {
+                    paginationEl.appendChild(creerBtn(p, p, p === pageCourante));
+                }
+            });
+
+            paginationEl.appendChild(creerBtn('›', pageCourante + 1, false, pageCourante === totalPages));
+        }
+
+        function filtrer() {
+            const query = normaliser(document.getElementById('search').value.trim());
+            const toutesLesRows = Array.from(document.querySelectorAll('.apprenant-row'));
+
+            toutesLesRows.forEach(row => row.style.display = 'none');
+
+            rowsFiltrees = toutesLesRows.filter(row => {
+                const nom = normaliser(row.getAttribute('data-nom') || '');
+                return query === '' || nom.includes(query);
+            });
+
+            afficherPage(1);
+        }
+
+        document.getElementById('search').addEventListener('input', filtrer);
+        filtrer();
     </script>
 
 @endsection

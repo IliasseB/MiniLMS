@@ -12,6 +12,9 @@
                 <p class="text-gray-400 mt-1">Bienvenue dans votre espace d'administration.</p>
             </div>
             <div class="flex gap-3">
+                <a href="{{ route('generation-ia.index') }}" class="flex items-center gap-2 bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl hover:bg-indigo-200 transition text-sm font-medium">
+                    ✨ Générer avec l'IA
+                </a>
                 <a href="{{ route('contenus-ia.create') }}" class="flex items-center gap-2 border border-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition text-sm font-medium">
                     ↑ Importer du contenu
                 </a>
@@ -53,7 +56,6 @@
                 <p class="text-3xl font-bold text-gray-900">{{ \App\Models\Quiz::count() }}</p>
             </a>
 
-            <!-- Notes totales -->
             <a href="{{ route('notes.index') }}" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition">
                 <div class="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center mb-4">
                     <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,7 +144,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach(\App\Models\Apprenant::with('formations')->latest()->take(3)->get() as $apprenant)
+                                @foreach(\App\Models\Apprenant::with('formations')->latest()->take(4)->get() as $apprenant)
                                     <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-3">
@@ -181,6 +183,9 @@
                     <h2 class="text-lg font-bold text-gray-800 mb-4">Actions Rapides</h2>
                     <div class="bg-indigo-600 rounded-2xl p-4">
                         <div class="flex flex-col gap-2">
+                            <a href="{{ route('generation-ia.index') }}" style="background:rgba(255,255,255,0.15)" class="text-white px-4 py-2.5 rounded-xl hover:opacity-90 transition text-sm font-medium">
+                                ✨ Générer avec l'IA
+                            </a>
                             <a href="{{ route('chapitres.create') }}" style="background:rgba(255,255,255,0.15)" class="text-white px-4 py-2.5 rounded-xl hover:opacity-90 transition text-sm font-medium">
                                 + Nouveau chapitre
                             </a>
@@ -210,7 +215,6 @@
                         </button>
                     </div>
 
-                    <!-- Formulaire d'ajout -->
                     <div id="todo-form" class="hidden mb-4">
                         <form method="POST" action="{{ route('todos.store') }}" class="flex gap-2">
                             @csrf
@@ -222,7 +226,6 @@
                         </form>
                     </div>
 
-                    <!-- Liste des tâches -->
                     <div class="flex flex-col gap-2">
                         @forelse(\App\Models\Todo::latest()->get() as $todo)
                             <div class="flex items-center gap-3 py-2 border-b border-gray-50">
@@ -258,6 +261,7 @@
                     </div>
                 </div>
             </div>
+        </div>
 
     @else
         <!-- Dashboard Apprenant -->
@@ -267,7 +271,6 @@
             $moyenne = $notes->count() > 0 ? round($notes->avg('note'), 2) : null;
         @endphp
 
-        <!-- En-tête de bienvenue -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900">
                 Bonjour, {{ auth()->user()->name }} ! 👋
@@ -275,10 +278,8 @@
             <p class="text-gray-500 mt-1">Ravi de vous revoir. Prêt à poursuivre votre apprentissage aujourd'hui ?</p>
         </div>
 
-        <!-- Cartes principales -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 
-            <!-- Carte Mes formations -->
             <a href="{{ route('mes-formations') }}" class="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition border border-gray-100 flex flex-col justify-between">
                 <div>
                     <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4">
@@ -299,7 +300,6 @@
                 </div>
             </a>
 
-            <!-- Carte Mes notes -->
             <a href="{{ route('mes-notes') }}" class="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition border border-gray-100 flex flex-col justify-between">
                 <div>
                     <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
@@ -334,7 +334,6 @@
             </a>
         </div>
 
-        <!-- Formations en cours -->
         <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-gray-800">Continuer l'apprentissage</h2>

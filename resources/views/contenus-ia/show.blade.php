@@ -33,14 +33,17 @@
                 @endif
             </div>
 
-            @php
-                // Détecte si le contenu contient un tableau (lignes avec |)
+           @php
                 $lignes = explode("\n", $contenuIa->contenu);
                 $estTableau = collect($lignes)->filter(fn($l) => str_contains($l, '|'))->count() > 2;
+                $estMarkdown = str_contains($contenuIa->contenu, '##') || str_contains($contenuIa->contenu, '**');
             @endphp
 
-            @if($estTableau)
-                <!-- Rendu tableau -->
+            @if($estMarkdown)
+                <div class="prose prose-indigo prose-sm max-w-none">
+                    {!! (new \League\CommonMark\CommonMarkConverter(['html_input' => 'strip', 'allow_unsafe_links' => false]))->convert($contenuIa->contenu) !!}
+                </div>
+            @elseif($estTableau)
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
                         @foreach($lignes as $index => $ligne)
@@ -70,7 +73,6 @@
                     </table>
                 </div>
             @else
-                <!-- Rendu texte normal -->
                 <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{{ $contenuIa->contenu }}</div>
             @endif
         </div>

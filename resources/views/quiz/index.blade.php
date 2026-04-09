@@ -15,7 +15,6 @@
         </a>
     </div>
 
-    <!-- Grande carte style maquette -->
     @php
         $totalQuiz = \App\Models\Quiz::count();
         $totalQuestions = \App\Models\Question::count();
@@ -28,7 +27,6 @@
 
     <div class="grid grid-cols-3 gap-4 mb-8">
 
-        <!-- Total quiz actifs -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 flex items-center justify-between">
             <div>
                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4">Total Quiz Actifs</p>
@@ -41,7 +39,6 @@
             </div>
         </div>
 
-        <!-- Taux de réussite -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
             <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4">Taux de réussite</p>
             <p class="text-6xl font-bold text-indigo-600">{{ $tauxReussite }}<span class="text-3xl text-gray-400 font-normal">%</span></p>
@@ -53,11 +50,25 @@
             </p>
         </div>
 
-        <!-- Questions -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
             <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-4">Questions</p>
             <p class="text-6xl font-bold text-gray-900">{{ $totalQuestions }}</p>
             <p class="text-xs text-gray-400 mt-3">{{ $moyenneQuestions }} moy./quiz</p>
+        </div>
+    </div>
+
+    <!-- Filtre -->
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-bold text-gray-800">Liste des Quiz</h2>
+        <div class="relative">
+            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <input id="search-quiz" type="text" placeholder="Rechercher un quiz..."
+                autocomplete="off"
+                class="pl-9 pr-4 py-2 bg-white border border-gray-100 rounded-xl text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 w-72">
         </div>
     </div>
 
@@ -72,9 +83,10 @@
                     <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wide">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="quiz-body">
                 @forelse($quizzes as $quiz)
-                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition quiz-row">
+                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition quiz-row"
+                        data-titre="{{ mb_strtolower($quiz->titre) }}">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-4">
                                 <div class="w-16 h-16 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -82,7 +94,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                 </div>
-                                <p class="font-semibold text-gray-800 quiz-titre">{{ $quiz->titre }}</p>
+                                <p class="font-semibold text-gray-800">{{ $quiz->titre }}</p>
                             </div>
                         </td>
                         <td class="px-6 py-4">
@@ -126,22 +138,91 @@
                 @endforelse
             </tbody>
         </table>
-        <div class="px-6 py-4 border-t border-gray-100">
-            <p class="text-xs text-gray-400 uppercase tracking-wide">
-                Affichage 1-{{ $quizzes->count() }} sur {{ $quizzes->count() }} quiz
-            </p>
+
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+            <p class="text-xs text-gray-400 uppercase tracking-wide" id="compteur"></p>
+            <div class="flex items-center gap-2" id="pagination"></div>
         </div>
     </div>
 
-    <!-- Script recherche -->
     <script>
-        document.getElementById('search-quiz').addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            document.querySelectorAll('.quiz-row').forEach(function(row) {
-                const titre = row.querySelector('.quiz-titre').textContent.toLowerCase();
-                row.style.display = titre.includes(query) ? '' : 'none';
+        const ITEMS_PAR_PAGE = 4;
+        let pageCourante = 1;
+        let rowsFiltrees = [];
+
+        function normaliser(str) {
+            return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        function creerBtn(texte, cible, actif = false, disabled = false) {
+            const btn = document.createElement('button');
+            btn.textContent = texte;
+            btn.disabled = disabled;
+            btn.className = `w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition ${
+                actif ? 'bg-indigo-600 text-white border-indigo-600'
+                : disabled ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+            }`;
+            if (!disabled) btn.addEventListener('click', () => afficherPage(cible));
+            return btn;
+        }
+
+        function afficherPage(page) {
+            pageCourante = page;
+            const debut = (page - 1) * ITEMS_PAR_PAGE;
+            const fin = debut + ITEMS_PAR_PAGE;
+
+            rowsFiltrees.forEach((row, index) => {
+                row.style.display = (index >= debut && index < fin) ? '' : 'none';
             });
-        });
+
+            const totalPages = Math.ceil(rowsFiltrees.length / ITEMS_PAR_PAGE);
+            document.getElementById('compteur').textContent =
+                `Affichage ${Math.min(debut + 1, rowsFiltrees.length)}-${Math.min(fin, rowsFiltrees.length)} sur ${rowsFiltrees.length} quiz`;
+
+            const paginationEl = document.getElementById('pagination');
+            paginationEl.innerHTML = '';
+
+            paginationEl.appendChild(creerBtn('‹', pageCourante - 1, false, pageCourante === 1));
+
+            let pages = [];
+            if (totalPages <= 5) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else {
+                pages.push(1);
+                if (pageCourante > 3) pages.push('...');
+                for (let i = Math.max(2, pageCourante - 1); i <= Math.min(totalPages - 1, pageCourante + 1); i++) pages.push(i);
+                if (pageCourante < totalPages - 2) pages.push('...');
+                pages.push(totalPages);
+            }
+
+            pages.forEach(p => {
+                if (p === '...') {
+                    const span = document.createElement('span');
+                    span.textContent = '...';
+                    span.className = 'w-8 h-8 flex items-center justify-center text-xs text-gray-400';
+                    paginationEl.appendChild(span);
+                } else {
+                    paginationEl.appendChild(creerBtn(p, p, p === pageCourante));
+                }
+            });
+
+            paginationEl.appendChild(creerBtn('›', pageCourante + 1, false, pageCourante === totalPages));
+        }
+
+        function filtrer() {
+            const query = normaliser(document.getElementById('search-quiz').value.trim());
+            const toutesLesRows = Array.from(document.querySelectorAll('.quiz-row'));
+            toutesLesRows.forEach(row => row.style.display = 'none');
+            rowsFiltrees = toutesLesRows.filter(row => {
+                const titre = normaliser(row.getAttribute('data-titre') || '');
+                return query === '' || titre.includes(query);
+            });
+            afficherPage(1);
+        }
+
+        document.getElementById('search-quiz').addEventListener('input', filtrer);
+        filtrer();
     </script>
 
 @endsection

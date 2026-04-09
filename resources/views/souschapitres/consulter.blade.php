@@ -47,94 +47,104 @@
 
         <!-- Contenu affiché selon la page -->
         @if($page == 0)
-        <!-- Résumé principal -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-6">
-            <h2 class="text-lg font-bold text-gray-800 mb-4">Résumé</h2>
-            @if($sousChapitre->contenu)
-                <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
-                    {{ $sousChapitre->contenu }}
-                </div>
-            @else
-                <p class="text-gray-400 text-sm">Aucun résumé disponible pour ce sous-chapitre.</p>
-            @endif
-        </div>
-
-        <!-- Premier contenu importé -->
-        @if($sousChapitre->contenusIa->count() > 0)
-            @php 
-                $premierContenu = $sousChapitre->contenusIa->first();
-                $lignes = explode("\n", $premierContenu->contenu);
-                $estTableau = collect($lignes)->filter(fn($l) => str_contains($l, '|'))->count() > 2;
-            @endphp
+            <!-- Résumé principal -->
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-6">
-                <div class="flex items-center gap-2 mb-4">
-                    @if($premierContenu->source)
-                        <span class="text-xs font-bold px-2 py-1 rounded-full
-                            {{ str_contains(strtolower($premierContenu->source), 'claude') ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700' }}">
-                            {{ $premierContenu->source }}
-                        </span>
-                    @endif
-                    <h2 class="text-lg font-bold text-gray-800">Contenu</h2>
-                </div>
-
-                @if($estTableau)
-                    @php $dansTableau = false; @endphp
-                    @foreach($lignes as $ligne)
-                        @if(str_contains($ligne, '|'))
-                            @if(!$dansTableau)
-                                <div class="overflow-x-auto mb-4">
-                                <table class="min-w-full text-sm border border-gray-100 rounded-xl overflow-hidden">
-                                <thead><tr class="bg-indigo-50">
-                                @foreach(array_map('trim', explode('|', $ligne)) as $cellule)
-                                    <th class="px-4 py-2 text-left text-xs font-bold text-indigo-700 uppercase tracking-wide">{{ $cellule }}</th>
-                                @endforeach
-                                </tr></thead><tbody>
-                                @php $dansTableau = true; @endphp
-                            @else
-                                <tr class="border-b border-gray-50 hover:bg-gray-50">
-                                @foreach(array_map('trim', explode('|', $ligne)) as $cellule)
-                                    <td class="px-4 py-2 text-gray-700 text-sm">{{ $cellule }}</td>
-                                @endforeach
-                                </tr>
-                            @endif
-                        @else
-                            @if($dansTableau)
-                                </tbody></table></div>
-                                @php $dansTableau = false; @endphp
-                            @endif
-                            @if(trim($ligne) !== '')
-                                <p class="text-gray-700 text-sm leading-relaxed mb-2">{{ $ligne }}</p>
-                            @endif
-                        @endif
-                    @endforeach
-                    @if($dansTableau)
-                        </tbody></table></div>
-                    @endif
+                <h2 class="text-lg font-bold text-gray-800 mb-4">Résumé</h2>
+                @if($sousChapitre->contenu)
+                    <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
+                        {{ $sousChapitre->contenu }}
+                    </div>
                 @else
-                    <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{{ $premierContenu->contenu }}</div>
+                    <p class="text-gray-400 text-sm">Aucun résumé disponible pour ce sous-chapitre.</p>
                 @endif
             </div>
-        @endif
-    @else
+
+            <!-- Premier contenu importé -->
+            @if($sousChapitre->contenusIa->count() > 0)
+                @php
+                    $premierContenu = $sousChapitre->contenusIa->first();
+                    $lignes = explode("\n", $premierContenu->contenu);
+                    $estTableau = collect($lignes)->filter(fn($l) => str_contains($l, '|'))->count() > 2;
+                    $estMarkdown = str_contains($premierContenu->contenu, '##') || str_contains($premierContenu->contenu, '**');
+                @endphp
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        @if($premierContenu->source)
+                            <span class="text-xs font-bold px-2 py-1 rounded-full
+                                {{ str_contains(strtolower($premierContenu->source), 'ia') ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700' }}">
+                                {{ $premierContenu->source }}
+                            </span>
+                        @endif
+                        <h2 class="text-lg font-bold text-gray-800">Contenu</h2>
+                    </div>
+
+                    @if($estMarkdown)
+                        <div class="prose prose-indigo prose-sm max-w-none">
+                            {!! (new \League\CommonMark\CommonMarkConverter(['html_input' => 'strip', 'allow_unsafe_links' => false]))->convert($premierContenu->contenu) !!}
+                        </div>
+                    @elseif($estTableau)
+                        @php $dansTableau = false; @endphp
+                        @foreach($lignes as $ligne)
+                            @if(str_contains($ligne, '|'))
+                                @if(!$dansTableau)
+                                    <div class="overflow-x-auto mb-4">
+                                    <table class="min-w-full text-sm border border-gray-100 rounded-xl overflow-hidden">
+                                    <thead><tr class="bg-indigo-50">
+                                    @foreach(array_map('trim', explode('|', $ligne)) as $cellule)
+                                        <th class="px-4 py-2 text-left text-xs font-bold text-indigo-700 uppercase tracking-wide">{{ $cellule }}</th>
+                                    @endforeach
+                                    </tr></thead><tbody>
+                                    @php $dansTableau = true; @endphp
+                                @else
+                                    <tr class="border-b border-gray-50 hover:bg-gray-50">
+                                    @foreach(array_map('trim', explode('|', $ligne)) as $cellule)
+                                        <td class="px-4 py-2 text-gray-700 text-sm">{{ $cellule }}</td>
+                                    @endforeach
+                                    </tr>
+                                @endif
+                            @else
+                                @if($dansTableau)
+                                    </tbody></table></div>
+                                    @php $dansTableau = false; @endphp
+                                @endif
+                                @if(trim($ligne) !== '')
+                                    <p class="text-gray-700 text-sm leading-relaxed mb-2">{{ $ligne }}</p>
+                                @endif
+                            @endif
+                        @endforeach
+                        @if($dansTableau)
+                            </tbody></table></div>
+                        @endif
+                    @else
+                        <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{{ $premierContenu->contenu }}</div>
+                    @endif
+                </div>
+            @endif
+
+        @else
             <!-- Pages suivantes : contenus importés -->
             @if($contenuActuel)
+                @php
+                    $lignes = explode("\n", $contenuActuel->contenu);
+                    $estTableau = collect($lignes)->filter(fn($l) => str_contains($l, '|'))->count() > 2;
+                    $estMarkdown = str_contains($contenuActuel->contenu, '##') || str_contains($contenuActuel->contenu, '**');
+                @endphp
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-6">
                     <div class="flex items-center gap-2 mb-4">
                         @if($contenuActuel->source)
                             <span class="text-xs font-bold px-2 py-1 rounded-full
-                                {{ str_contains(strtolower($contenuActuel->source), 'claude') ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700' }}">
+                                {{ str_contains(strtolower($contenuActuel->source), 'ia') ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700' }}">
                                 {{ $contenuActuel->source }}
                             </span>
                         @endif
                         <h2 class="text-lg font-bold text-gray-800">Contenu {{ $page }}</h2>
                     </div>
 
-                    @php
-                        $lignes = explode("\n", $contenuActuel->contenu);
-                        $estTableau = collect($lignes)->filter(fn($l) => str_contains($l, '|'))->count() > 2;
-                    @endphp
-
-                    @if($estTableau)
+                    @if($estMarkdown)
+                        <div class="prose prose-indigo prose-sm max-w-none">
+                            {!! (new \League\CommonMark\CommonMarkConverter(['html_input' => 'strip', 'allow_unsafe_links' => false]))->convert($contenuActuel->contenu) !!}
+                        </div>
+                    @elseif($estTableau)
                         <div class="overflow-x-auto mb-4">
                             <table class="min-w-full text-sm border border-gray-100 rounded-xl overflow-hidden">
                                 @php $premiereRangeTableau = true; @endphp
@@ -165,7 +175,6 @@
                                 </tbody>
                             </table>
                         </div>
-                        <!-- Texte hors tableau -->
                         @foreach($lignes as $ligne)
                             @if(!str_contains($ligne, '|') && trim($ligne) !== '')
                                 <p class="text-gray-700 text-sm leading-relaxed mb-1">{{ $ligne }}</p>
@@ -197,7 +206,7 @@
             @endif
         </div>
 
-        <!-- Bouton passer le quiz (affiché sur la dernière page) -->
+        <!-- Bouton passer le quiz -->
         @if($page == $totalPages && $sousChapitre->quiz)
             <div class="bg-indigo-600 rounded-2xl p-6 flex items-center justify-between">
                 <div>

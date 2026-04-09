@@ -71,10 +71,13 @@ class SousChapitreController extends Controller
         $sousChapitre->load('chapitre.formation', 'quiz.questions', 'contenusIa');
         $contenus = $sousChapitre->contenusIa;
 
-        // Page 0 = résumé + 1er contenu
-        // Pages suivantes = contenus à partir du 2ème (index $page)
         $totalPages = max(0, $contenus->count() - 1);
         $contenuActuel = $page > 0 ? $contenus->get($page) : null;
+
+        // Si la page demandée n'existe pas, retourne à la page 0
+        if ($page > 0 && !$contenuActuel) {
+            return redirect()->route('souschapitres.consulter', [$sousChapitre, 0]);
+        }
 
         return view('souschapitres.consulter', compact('sousChapitre', 'page', 'totalPages', 'contenuActuel'));
     }

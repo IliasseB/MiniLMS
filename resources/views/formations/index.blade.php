@@ -4,15 +4,19 @@
 
 @section('content')
 
-    <!-- En-tête -->
     <div class="flex items-start justify-between mb-8">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Catalogue de Formations</h1>
             <p class="text-gray-400 mt-1">Gérez vos programmes éducatifs et suivez leur performance globale.</p>
         </div>
-        <a href="{{ route('formations.create') }}" class="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition text-sm font-medium">
-            + Nouvelle formation
-        </a>
+        <div class="flex gap-3">
+            <a href="{{ route('generation-ia.index') }}" class="flex items-center gap-2 bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl hover:bg-indigo-200 transition text-sm font-medium">
+                ✨ Générer avec l'IA
+            </a>
+            <a href="{{ route('formations.create') }}" class="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition text-sm font-medium">
+                + Nouvelle formation
+            </a>
+        </div>
     </div>
 
     <!-- Cartes stats -->
@@ -25,7 +29,6 @@
     @endphp
     <div class="grid grid-cols-4 gap-4 mb-8">
 
-        <!-- Total formations -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-start justify-between mb-4">
                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Total Formations</p>
@@ -38,7 +41,6 @@
             <p class="text-4xl font-bold text-gray-900">{{ \App\Models\Formation::count() }}</p>
         </div>
 
-        <!-- Heures de contenu -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-start justify-between mb-4">
                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Heures de contenu</p>
@@ -51,7 +53,6 @@
             <p class="text-4xl font-bold text-gray-900">{{ $totalHeures }}<span class="text-lg text-gray-400 font-normal"> h</span></p>
         </div>
 
-        <!-- Apprenants actifs -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-start justify-between mb-4">
                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Apprenants actifs</p>
@@ -64,7 +65,6 @@
             <p class="text-4xl font-bold text-gray-900">{{ $totalApprenants }}</p>
         </div>
 
-        <!-- Apprenants par formation -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-start justify-between mb-4">
                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Apprenants par Formation</p>
@@ -81,7 +81,6 @@
     <!-- Liste des formations -->
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
-        <!-- En-tête liste -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <h2 class="text-base font-bold text-gray-800">Liste des formations</h2>
             <div class="relative">
@@ -91,6 +90,7 @@
                     </svg>
                 </div>
                 <input id="search-formation" type="text" placeholder="Rechercher..."
+                    autocomplete="off"
                     class="pl-9 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400">
             </div>
         </div>
@@ -105,10 +105,10 @@
                     <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wide">Actions</th>
                 </tr>
             </thead>
-            <tbody id="formations-table">
+            <tbody id="formations-body">
                 @forelse($formations as $formation)
-                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition formation-row">
-                        <!-- Formation -->
+                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition formation-row"
+                        data-nom="{{ mb_strtolower($formation->nom) }}">
                         <td class="px-6 py-5">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -117,22 +117,18 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="font-semibold text-gray-800 formation-nom">{{ $formation->nom }}</p>
+                                    <p class="font-semibold text-gray-800">{{ $formation->nom }}</p>
                                     @if($formation->description)
                                         <p class="text-gray-400 text-xs">{{ Str::limit($formation->description, 40) }}</p>
                                     @endif
                                 </div>
                             </div>
                         </td>
-                        <!-- Niveau -->
                         <td class="px-6 py-5">
                             <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md">{{ $formation->niveau }}</span>
                         </td>
-                        <!-- Durée -->
                         <td class="px-6 py-5 text-sm text-gray-500">{{ $formation->duree ?? '-' }}h</td>
-                        <!-- Apprenants -->
                         <td class="px-6 py-5 text-sm text-gray-500">{{ $formation->apprenants->count() }}</td>
-                        <!-- Actions -->
                         <td class="px-6 py-5">
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('formations.show', $formation) }}" class="text-gray-400 hover:text-gray-600">
@@ -167,22 +163,97 @@
         </table>
 
         <!-- Pied de tableau -->
-        <div class="px-6 py-4 border-t border-gray-100">
-            <p class="text-xs text-gray-400 uppercase tracking-wide">
-                Affichage 1-{{ $formations->count() }} sur {{ $formations->count() }} formations
-            </p>
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+            <p class="text-xs text-gray-400 uppercase tracking-wide" id="compteur"></p>
+            <div class="flex items-center gap-2" id="pagination"></div>
         </div>
     </div>
 
-    <!-- Script recherche -->
     <script>
-        document.getElementById('search-formation').addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            document.querySelectorAll('.formation-row').forEach(function(row) {
-                const nom = row.querySelector('.formation-nom').textContent.toLowerCase();
-                row.style.display = nom.includes(query) ? '' : 'none';
+        const ITEMS_PAR_PAGE = 4;
+        let pageCourante = 1;
+        let rowsFiltrees = [];
+
+        function normaliser(str) {
+            return str.toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+        }
+
+        function creerBtn(texte, cible, actif = false, disabled = false) {
+            const btn = document.createElement('button');
+            btn.textContent = texte;
+            btn.disabled = disabled;
+            btn.className = `w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition ${
+                actif ? 'bg-indigo-600 text-white border-indigo-600'
+                : disabled ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+            }`;
+            if (!disabled) btn.addEventListener('click', () => afficherPage(cible));
+            return btn;
+        }
+
+        function afficherPage(page) {
+            pageCourante = page;
+            const debut = (page - 1) * ITEMS_PAR_PAGE;
+            const fin = debut + ITEMS_PAR_PAGE;
+
+            rowsFiltrees.forEach((row, index) => {
+                row.style.display = (index >= debut && index < fin) ? '' : 'none';
             });
-        });
+
+            const totalPages = Math.ceil(rowsFiltrees.length / ITEMS_PAR_PAGE);
+            document.getElementById('compteur').textContent =
+                `Affichage ${Math.min(debut + 1, rowsFiltrees.length)}-${Math.min(fin, rowsFiltrees.length)} sur ${rowsFiltrees.length} formation(s)`;
+
+            const paginationEl = document.getElementById('pagination');
+            paginationEl.innerHTML = '';
+
+            paginationEl.appendChild(creerBtn('‹', pageCourante - 1, false, pageCourante === 1));
+
+            let pages = [];
+            if (totalPages <= 5) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else {
+                pages.push(1);
+                if (pageCourante > 3) pages.push('...');
+                for (let i = Math.max(2, pageCourante - 1); i <= Math.min(totalPages - 1, pageCourante + 1); i++) {
+                    pages.push(i);
+                }
+                if (pageCourante < totalPages - 2) pages.push('...');
+                pages.push(totalPages);
+            }
+
+            pages.forEach(p => {
+                if (p === '...') {
+                    const span = document.createElement('span');
+                    span.textContent = '...';
+                    span.className = 'w-8 h-8 flex items-center justify-center text-xs text-gray-400';
+                    paginationEl.appendChild(span);
+                } else {
+                    paginationEl.appendChild(creerBtn(p, p, p === pageCourante));
+                }
+            });
+
+            paginationEl.appendChild(creerBtn('›', pageCourante + 1, false, pageCourante === totalPages));
+        }
+
+        function filtrer() {
+            const query = normaliser(document.getElementById('search-formation').value.trim());
+            const toutesLesRows = Array.from(document.querySelectorAll('.formation-row'));
+
+            toutesLesRows.forEach(row => row.style.display = 'none');
+
+            rowsFiltrees = toutesLesRows.filter(row => {
+                const nom = normaliser(row.getAttribute('data-nom') || '');
+                return query === '' || nom.includes(query);
+            });
+
+            afficherPage(1);
+        }
+
+        document.getElementById('search-formation').addEventListener('input', filtrer);
+        filtrer();
     </script>
 
 @endsection

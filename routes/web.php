@@ -13,6 +13,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\ResultatQuizController;
 use App\Http\Controllers\ContenuIaController;
 use App\Http\Controllers\TodoController;
+use App\Http\Controllers\GenerationIaController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -27,6 +28,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+
+    // Route génération IA
+    Route::get('generation-ia', [GenerationIaController::class, 'index'])->name('generation-ia.index');
+    Route::post('generation-ia', [GenerationIaController::class, 'generer'])->name('generation-ia.generer');
 
     // Routes Admin uniquement
     Route::middleware(['admin'])->group(function () {
