@@ -1,7 +1,7 @@
 FROM php:7.4-apache
 
 RUN apt-get update && apt-get install -y \
-    libzip-dev zip unzip git curl nodejs npm \
+    libzip-dev libsqlite3-dev zip unzip git curl nodejs npm \
     && docker-php-ext-install zip pdo pdo_sqlite
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
