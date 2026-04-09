@@ -33,7 +33,7 @@ class GenerationIaController extends Controller
                     'Content-Type' => 'application/json',
                 ],
                 'json' => [
-                    'model' => 'mistral-large-latest',
+                    'model' => 'open-mistral-nemo',
                     'max_tokens' => 8000,
                     'messages' => [
                         ['role' => 'user', 'content' => $prompt]
