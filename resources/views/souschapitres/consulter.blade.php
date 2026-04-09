@@ -78,43 +78,10 @@
                         <h2 class="text-lg font-bold text-gray-800">Contenu</h2>
                     </div>
 
-                    @if($estMarkdown)
+                    @if($estMarkdown || $estTableau)
                         <div class="prose prose-indigo prose-sm max-w-none">
-                            {!! (new \League\CommonMark\CommonMarkConverter(['html_input' => 'strip', 'allow_unsafe_links' => false]))->convert($premierContenu->contenu) !!}
+                            {!! (new \League\CommonMark\GithubFlavoredMarkdownConverter(['html_input' => 'strip', 'allow_unsafe_links' => false]))->convert($premierContenu->contenu) !!}
                         </div>
-                    @elseif($estTableau)
-                        @php $dansTableau = false; @endphp
-                        @foreach($lignes as $ligne)
-                            @if(str_contains($ligne, '|'))
-                                @if(!$dansTableau)
-                                    <div class="overflow-x-auto mb-4">
-                                    <table class="min-w-full text-sm border border-gray-100 rounded-xl overflow-hidden">
-                                    <thead><tr class="bg-indigo-50">
-                                    @foreach(array_map('trim', explode('|', $ligne)) as $cellule)
-                                        <th class="px-4 py-2 text-left text-xs font-bold text-indigo-700 uppercase tracking-wide">{{ $cellule }}</th>
-                                    @endforeach
-                                    </tr></thead><tbody>
-                                    @php $dansTableau = true; @endphp
-                                @else
-                                    <tr class="border-b border-gray-50 hover:bg-gray-50">
-                                    @foreach(array_map('trim', explode('|', $ligne)) as $cellule)
-                                        <td class="px-4 py-2 text-gray-700 text-sm">{{ $cellule }}</td>
-                                    @endforeach
-                                    </tr>
-                                @endif
-                            @else
-                                @if($dansTableau)
-                                    </tbody></table></div>
-                                    @php $dansTableau = false; @endphp
-                                @endif
-                                @if(trim($ligne) !== '')
-                                    <p class="text-gray-700 text-sm leading-relaxed mb-2">{{ $ligne }}</p>
-                                @endif
-                            @endif
-                        @endforeach
-                        @if($dansTableau)
-                            </tbody></table></div>
-                        @endif
                     @else
                         <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{{ $premierContenu->contenu }}</div>
                     @endif
@@ -140,46 +107,10 @@
                         <h2 class="text-lg font-bold text-gray-800">Contenu {{ $page }}</h2>
                     </div>
 
-                    @if($estMarkdown)
+                    @if($estMarkdown || $estTableau)
                         <div class="prose prose-indigo prose-sm max-w-none">
-                            {!! (new \League\CommonMark\CommonMarkConverter(['html_input' => 'strip', 'allow_unsafe_links' => false]))->convert($contenuActuel->contenu) !!}
+                            {!! (new \League\CommonMark\GithubFlavoredMarkdownConverter(['html_input' => 'strip', 'allow_unsafe_links' => false]))->convert($contenuActuel->contenu) !!}
                         </div>
-                    @elseif($estTableau)
-                        <div class="overflow-x-auto mb-4">
-                            <table class="min-w-full text-sm border border-gray-100 rounded-xl overflow-hidden">
-                                @php $premiereRangeTableau = true; @endphp
-                                @foreach($lignes as $ligne)
-                                    @if(str_contains($ligne, '|'))
-                                        @php $cellules = array_map('trim', explode('|', $ligne)); @endphp
-                                        @if($premiereRangeTableau)
-                                            <thead>
-                                                <tr class="bg-indigo-50">
-                                                    @foreach($cellules as $cellule)
-                                                        <th class="px-4 py-2 text-left text-xs font-bold text-indigo-700 uppercase tracking-wide">{{ $cellule }}</th>
-                                                    @endforeach
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                            @php $premiereRangeTableau = false; @endphp
-                                        @else
-                                            <tr class="border-b border-gray-50 hover:bg-gray-50">
-                                                @foreach($cellules as $cellule)
-                                                    <td class="px-4 py-2 text-gray-700 text-sm">{{ $cellule }}</td>
-                                                @endforeach
-                                            </tr>
-                                        @endif
-                                    @elseif(trim($ligne) !== '')
-                                        @php $premiereRangeTableau = false; @endphp
-                                    @endif
-                                @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        @foreach($lignes as $ligne)
-                            @if(!str_contains($ligne, '|') && trim($ligne) !== '')
-                                <p class="text-gray-700 text-sm leading-relaxed mb-1">{{ $ligne }}</p>
-                            @endif
-                        @endforeach
                     @else
                         <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{{ $contenuActuel->contenu }}</div>
                     @endif
