@@ -166,14 +166,23 @@ Contexte :
                         'chapitre_id' => $chapitre->id,
                     ]);
 
+                    // Fallback contenu IA
+                    $texteContenu = null;
+
                     if (!empty($contenu['contenu']) && is_string($contenu['contenu'])) {
-                        ContenuIa::create([
-                            'titre' => $scData['titre'],
-                            'contenu' => $contenu['contenu'],
-                            'source' => 'IA — Généré automatiquement',
-                            'sous_chapitre_id' => $sousChapitre->id,
-                        ]);
+                        $texteContenu = $contenu['contenu'];
+                    } elseif (!empty($contenu['resume']) && is_string($contenu['resume'])) {
+                        $texteContenu = $contenu['resume'];
+                    } else {
+                        $texteContenu = "L'IA a rencontré quelques problèmes dans la réalisation du contenu, complétez-le manuellement.";
                     }
+
+                    ContenuIa::create([
+                        'titre' => $scData['titre'],
+                        'contenu' => $texteContenu,
+                        'source' => 'IA — Généré automatiquement',
+                        'sous_chapitre_id' => $sousChapitre->id,
+                    ]);
 
                     $souschapitresCrees[] = $sousChapitre;
                 }
