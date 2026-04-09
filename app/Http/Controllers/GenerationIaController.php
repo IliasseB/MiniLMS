@@ -21,7 +21,7 @@ class GenerationIaController extends Controller
 
     private function appelerIA(Client $client, string $prompt, int $tentative = 0): ?array
     {
-        sleep($tentative === 0 ? 8 : 15 * $tentative);
+        sleep($tentative === 0 ? 2 : 5 * $tentative);
 
         try {
             $response = $client->post('https://api.mistral.ai/v1/chat/completions', [
@@ -33,7 +33,7 @@ class GenerationIaController extends Controller
                     'Content-Type' => 'application/json',
                 ],
                 'json' => [
-                    'model' => 'open-mixtral-8x7b',
+                    'model' => 'mistral-small-latest',
                     'max_tokens' => 8000,
                     'messages' => [
                         ['role' => 'user', 'content' => $prompt]
