@@ -16,7 +16,7 @@ use App\Http\Controllers\TodoController;
 use App\Http\Controllers\GenerationIaController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 // Routes authentification (générées par Breeze)
