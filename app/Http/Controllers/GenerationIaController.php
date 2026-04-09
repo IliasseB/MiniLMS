@@ -33,7 +33,7 @@ class GenerationIaController extends Controller
                     'Content-Type' => 'application/json',
                 ],
                 'json' => [
-                    'model' => 'open-mistral-7b',
+                    'model' => 'mistral-small-latest',
                     'max_tokens' => 4000,
                     'messages' => [
                         ['role' => 'user', 'content' => $prompt]
@@ -44,16 +44,12 @@ class GenerationIaController extends Controller
             $body = json_decode($response->getBody()->getContents(), true);
             $texte = $body['choices'][0]['message']['content'] ?? '';
 
-            error_log('=== REPONSE BRUTE IA === ' . $texte);
-
             // Nettoie le JSON
             $texte = preg_replace('/```json\s*/i', '', $texte);
             $texte = preg_replace('/```\s*/i', '', $texte);
             $texte = trim($texte);
 
             $data = json_decode($texte, true);
-
-            error_log('=== JSON PARSE === ' . json_encode($data));
 
             if (is_array($data) && isset($data[0])) {
                 $data = $data[0];
@@ -146,12 +142,12 @@ Demande : " . $request->prompt;
 
                 foreach ($chapitreData['sous_chapitres'] as $scData) {
 
-                    $promptContenu = "Tu es un assistant pédagogique expert. Génère le contenu pour le sous-chapitre indiqué. IMPORTANT : Ne génère PAS de quiz dans le contenu, le quiz sera créé séparément. Le champ 'contenu' doit être UNE SEULE CHAÎNE DE TEXTE (string), pas un objet JSON. Structure le texte avec des titres (##), des listes à puces (-) et des exemples concrets. Réponds UNIQUEMENT en JSON valide sans texte avant ou après.
+                    $promptContenu = "Tu es un assistant pédagogique expert. Génère le contenu pédagogique pour le sous-chapitre indiqué. Le champ 'contenu' doit être UNE SEULE CHAÎNE DE TEXTE (string), pas un objet JSON. Structure le texte avec des titres (##), des listes à puces (-) et des exemples concrets. Le champ 'contenu' ne doit pas dépasser 1500 mots. Le quiz sera généré dans une étape séparée, concentre-toi sur le contenu pédagogique du cours dans ce JSON. Réponds UNIQUEMENT en JSON valide sans texte avant ou après.
 
 Structure OBLIGATOIRE :
 {
   \"resume\": \"Résumé clair de 3 phrases maximum en texte simple\",
-  \"contenu\": \"Texte long formaté avec des sections ## Titre, des listes - item et des exemples. Tout en une seule string. PAS de quiz dedans.\"
+  \"contenu\": \"Texte formaté avec des sections ## Titre, des listes - item et des exemples. Maximum 1500 mots. Tout en une seule string.\"
 }
 
 Contexte :
@@ -163,9 +159,6 @@ Contexte :
 
                     $contenu = $this->appelerIA($client, $promptContenu);
 
-                    \Log::info('Sous-chapitre : ' . $scData['titre'] . ' | Contenu : ' . json_encode($contenu));
-                    error_log('=== CONTENU SC === ' . $scData['titre'] . ' : ' . json_encode($contenu));
-
                     $sousChapitre = SousChapitre::create([
                         'titre' => $scData['titre'],
                         'contenu' => isset($contenu['resume']) && is_string($contenu['resume'])
@@ -174,7 +167,6 @@ Contexte :
                         'chapitre_id' => $chapitre->id,
                     ]);
 
-                    // Fallback contenu IA
                     $texteContenu = null;
 
                     if (!empty($contenu['contenu']) && is_string($contenu['contenu'])) {
