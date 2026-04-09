@@ -33,44 +33,15 @@
                 @endif
             </div>
 
-           @php
+            @php
                 $lignes = explode("\n", $contenuIa->contenu);
                 $estTableau = collect($lignes)->filter(fn($l) => str_contains($l, '|'))->count() > 2;
                 $estMarkdown = str_contains($contenuIa->contenu, '##') || str_contains($contenuIa->contenu, '**');
             @endphp
 
-            @if($estMarkdown)
+            @if($estMarkdown || $estTableau)
                 <div class="prose prose-indigo prose-sm max-w-none">
-                    {!! (new \League\CommonMark\CommonMarkConverter(['html_input' => 'strip', 'allow_unsafe_links' => false]))->convert($contenuIa->contenu) !!}
-                </div>
-            @elseif($estTableau)
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm">
-                        @foreach($lignes as $index => $ligne)
-                            @php $cellules = array_map('trim', explode('|', $ligne)); @endphp
-                            @if(str_contains($ligne, '|'))
-                                @if($index === 0 || (collect(array_slice($lignes, 0, $index))->filter(fn($l) => str_contains($l, '|'))->count() === 0))
-                                    <thead>
-                                        <tr class="border-b-2 border-gray-200">
-                                            @foreach($cellules as $cellule)
-                                                <th class="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wide">{{ $cellule }}</th>
-                                            @endforeach
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                @else
-                                    <tr class="border-b border-gray-50 hover:bg-gray-50">
-                                        @foreach($cellules as $cellule)
-                                            <td class="px-4 py-2 text-gray-700 font-mono text-sm">{{ $cellule }}</td>
-                                        @endforeach
-                                    </tr>
-                                @endif
-                            @elseif(trim($ligne) !== '')
-                                <p class="text-gray-700 text-sm mb-2">{{ $ligne }}</p>
-                            @endif
-                        @endforeach
-                        </tbody>
-                    </table>
+                    {!! (new \League\CommonMark\GithubFlavoredMarkdownConverter(['html_input' => 'strip', 'allow_unsafe_links' => false]))->convert($contenuIa->contenu) !!}
                 </div>
             @else
                 <div class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{{ $contenuIa->contenu }}</div>
