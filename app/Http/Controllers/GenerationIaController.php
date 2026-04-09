@@ -21,7 +21,7 @@ class GenerationIaController extends Controller
 
     private function appelerIA(Client $client, string $prompt, int $tentative = 0): ?array
     {
-        sleep($tentative === 0 ? 2 : 5 * $tentative);
+        sleep($tentative === 0 ? 2 : 10 * $tentative);
 
         try {
             $response = $client->post('https://api.mistral.ai/v1/chat/completions', [
@@ -63,6 +63,9 @@ class GenerationIaController extends Controller
 
         } catch (\Exception $e) {
             if ($tentative < 3) {
+                if (str_contains($e->getMessage(), '429')) {
+                    sleep(30);
+                }
                 return $this->appelerIA($client, $prompt, $tentative + 1);
             }
             throw $e;
