@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: minilms
+    env: docker
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
